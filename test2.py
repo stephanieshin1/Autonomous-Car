@@ -8,7 +8,7 @@ if s.isOpen():
 data = ""
 
 while data != 'STOP/':
-    data = s.read(s.read_until('/',)).decode("ascii")
+    data = s.read(s.read_until('/')).decode("ascii")
     print(data)
 
 print("Program ended.")
