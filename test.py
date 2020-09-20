@@ -10,7 +10,6 @@ def main():
     window = tk.Tk()
     window.title('Environment Map')
     canvas = tk.Canvas(window, width=750, height=750, bg="white")
-    # 4x4 pixels = 1 cm^3
     canvas.pack()
 
     # setting up variables
