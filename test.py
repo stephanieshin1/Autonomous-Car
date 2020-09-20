@@ -1,12 +1,9 @@
 import tkinter as tk
 import serial
 
-# car starts 50 down, 750 across
+# we will be given...
 # (x,y) coordinates of car every interval
 # (x,y) of left sensor when there is a drastic change
-
-# ** ??? **
-# CONVERTING ARDUINO DATA INTO PYTHON
 
 def main():
     # setting up the window
