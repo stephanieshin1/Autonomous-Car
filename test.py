@@ -5,6 +5,9 @@ import serial
 # (x,y) coordinates of car every interval
 # (x,y) of left sensor when there is a drastic change
 
+# ** ??? **
+# CONVERTING ARDUINO DATA INTO PYTHON
+
 def main():
     # setting up the window
     window = tk.Tk()
@@ -12,19 +15,21 @@ def main():
     canvas = tk.Canvas(window, width=750, height=750, bg="white")
     canvas.pack()
 
+    canvas.create_rectangle(5, 5, 750, 750, outline="black", width=5) # drawing the border
+
     # setting up variables
     mapping = True
+    # s = serial.Serial('/dev/cu.HC-05-DevB')
+    # if s.isOpen() == False:
+        # print("uh oh!")
+    # else:
+        # print("yay!")
 
-    # set up serial port
-    # COM = ""
-    # BAUD = ""
-    # SerialPort = serial.Serial(COM, BAUD, timeout=1)
 
     # variable initialization
-    car_x_start = 750
-    car_y_start = 50
-    car_x_end = 100
-    car_y_end = 50
+    car = None
+    car_x = 650
+    car_y = 100
 
     obst_x_start = 0
     obst_y_start = 0
@@ -32,7 +37,6 @@ def main():
     obst_y_end = 0
 
     obstLine = True
-    carLine = True
     turned = False
     verticalFirst = True
 
@@ -42,12 +46,7 @@ def main():
 
     # while loop for actual mapping portion while car is moving
     while (mapping):
-        # IncomingData = SerialPort.readline()
-
         if (IncomingData):
-            # print((IncomingData).decode('utf-8')) ??
-            # !!!! convert it to integers x and y
-
             if obstLine: # start point of new obstacle
                 obst_x_start = int(input("obst_x_start: ")) # TEMP CODE
                 obst_y_start = int(input("obst_y_start: ")) # TEMP CODE
@@ -55,7 +54,7 @@ def main():
             else: # end point of new obstacle
                 obst_x_end = int(input("obst_x_end: ")) # TEMP CODE
                 obst_y_end = int(input("obst_y_end: ")) # TEMP CODE
-                canvas.create_line(obst_x_start, obst_y_start, obst_x_end, obst_y_end) # draw the line w/ start and end points
+                canvas.create_line(obst_x_start, obst_y_start, obst_x_end, obst_y_end, fill="black", width=5) # draw the line w/ start and end points
                 obstLine = True # line has finished
                 if turned == False: # if we have not turned a corner, only 1 side of the obstacle is drawn
                     # figure out if the x or the y was changing and calculate the length of side
@@ -73,33 +72,35 @@ def main():
                         side2 = (obst_x_start - obst_x_end)
                     # drawing the rest of the box since we have 2 of the sides of the box
                     if verticalFirst: # if we went up/down then to the side
-                        canvas.create_line(obst_x_end, obst_y_end, obst_x_end, obst_y_end + side1)
-                        canvas.create_line(obst_x_end, obst_y_end + side1, obst_x_end + side2, obst_y_end + side1)
+                        canvas.create_line(obst_x_end, obst_y_end, obst_x_end, obst_y_end + side1, fill="black", width=5)
+                        canvas.create_line(obst_x_end, obst_y_end + side1, obst_x_end + side2, obst_y_end + side1, fill="black", width=5)
                     else: # if we went to the side then up/down
-                        canvas.create_line(obst_x_end, obst_y_end, obst_x_end + side1, obst_y_end)
-                        canvas.create_line(obst_x_end + side1, obst_y_end, obst_x_end + side1, obst_y_end + side2)
+                        canvas.create_line(obst_x_end, obst_y_end, obst_x_end + side1, obst_y_end, fill="black", width=5)
+                        canvas.create_line(obst_x_end + side1, obst_y_end, obst_x_end + side1, obst_y_end + side2, fill="black", width=5)
 
                     turned = False # reset variable for next obstacle
 
-            if carLine:
-                # update car start
-                carLine = False
-            else:
-                # update car end
-                # canvas.create_line(car_x_start, car_y_start, car_x_end, car_y_end)
-                carLine = True
+            # keep track of old coordinates before update to create dashed line
+            car_x_old = car_x
+            car_y_old = car_y
 
-        else: # if there is no incoming data...
+            # update the car
+            car_x = 600
+            car_y = 100
+            canvas.delete(car)
+            canvas.create_rectangle(car_x_old - 5, car_y_old - 5, car_x_old + 5, car_y_old + 5, fill="forest green", outline="forest green")
+            car = canvas.create_rectangle(car_x - 15, car_y - 15, car_x + 15, car_y + 15, fill="light blue", outline="light blue")
+
+            if obstLine == True and turned == False:
+                user = input("keep going? ")
+                if user == "no":
+                    mapping = False
+
+        go = False
+        if go: # if there is no incoming data...
             pass
-            # elif the car is finished
             # CODE TO END WHILE LOOP
 
-        # TEST CODE DELETE LATER
-        user = input("Still collecting data? ")
-        if user != "yes":
-            return window
-        # END OF TEST CODE BLOCK
+    window.mainloop()
 
-window = main()
-window.mainloop()
-
+main()
