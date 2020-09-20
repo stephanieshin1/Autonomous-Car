@@ -1,4 +1,3 @@
-import tkinter as tk
 import serial
 
 s = serial.Serial('/dev/cu.HC-05-DevB', timeout=None)
