@@ -38,6 +38,7 @@ def main():
     maxY = 0
 
     l = None
+
     obstLine = True
 
     # while loop for actual mapping portion while car is moving
