@@ -29,21 +29,25 @@ const int RighttrigPin = 26;
 const int RightechoPin = 24;
 
 float duration, distance;
-int selfX, selfY;
+int selfX, selfY, boxX, boxY;;
 enum direct {WEST, SOUTH, EAST, NORTH};
-bool inProgress = false;
+direct facing;
 
 float getDistance(int, int);
 
-//Driving Functions
+// Driving Functions
 void driveStraight();
 void turnLeft();
 void powerOff();
 
-void printSelf(int);
-void sendBox(int);
+// Indication functions
+void startLights();
+void printSelf();
+void sendBox();
 
 void setup(){
+
+  Serial.begin(9600);
   
   pinMode(FLtrigPin, OUTPUT); 
   pinMode(FLechoPin, INPUT); 
@@ -53,7 +57,7 @@ void setup(){
   pinMode(LeftechoPin, INPUT); 
   pinMode(RighttrigPin, OUTPUT);
   pinMode(RightechoPin, INPUT);
-  Serial.begin(9600);
+  
  
     //Set pins as outputs
     pinMode(LED, OUTPUT);
@@ -75,35 +79,21 @@ void setup(){
     analogWrite(FRenable, 255);
     analogWrite(RLenable, 255);
     analogWrite(RRenable, 255);
+
+    delay(9000);
+    startLights();
+    facing = WEST;
 }
 
 void loop(){
-
-  // Start up blink
-  Serial.print("Scanning will commence in 3...");
-  analogWrite(LED, 150);
-  delay(1000);
-  analogWrite(LED, 0);
-  Serial.print("2...");
-  analogWrite(LED, 150);
-  delay(1000);
-  analogWrite(LED, 0);
-  Serial.print("1...");
-  analogWrite(LED, 150);
-  delay(1000);
-  analogWrite(LED, 0);
-
-  inProgress = true;
   
   int turns = 1;
-  direct facing = WEST;
+  int tempX, tempY;
+  bool done = false;
+  
   delay(500);
   selfX = ((getDistance(FLtrigPin, FLechoPin) + getDistance(FRtrigPin, FRechoPin)) / 2) + 12;
   selfY = getDistance(RighttrigPin, RightechoPin) + 9;
-  Serial.print("Starting Point: ");Serial.print(selfX);Serial.print(", "); Serial.println(selfY);
-  //Serial.print("Left Sensor: ");Serial.print(getDistance(FLtrigPin, FLechoPin));
-  //Serial.print(" Right Sensor: ");Serial.println(getDistance(FRtrigPin, FRechoPin));
-  Serial.println("Facing: ");Serial.println(facing);
   delay(2000);
 
   do{
@@ -111,48 +101,119 @@ void loop(){
     // Move Forward
     driveStraight();
     
-    printSelf(facing);
+    printSelf();
     delay(100);
 
     if( getDistance(LefttrigPin, LeftechoPin) <= 30){
-      sendBox(facing);
+      
+      sendBox();
+      //while(boxX <= 0 || boxY <= 0){
+          //sendBox();
+        //}
+      
+      tempX = boxX;
+      tempY = boxY;
+      //if(tempX >= 0 && tempY >= 0){
+        Serial.print('b');Serial.print(tempX);Serial.print(',');Serial.print(tempY);
+        Serial.println('!');
+      //}
+      
       while(getDistance(LefttrigPin, LeftechoPin) <= 30){
-        //Serial.print("...Scanning Box...");
+        printSelf();
+        delay(100);
         analogWrite(LED, 150);
       }
-      //Serial.println("...Done Scanning...");
-      sendBox(facing);
-      analogWrite(LED, 0);
-    }
+      
+      sendBox();
+       //while(boxX <= 0 || boxY <= 0){
+          //sendBox();
+        //}
+      
+      if (facing == 0 || facing == 2){
+        tempX = boxX;
+      }
+      else if (facing == 1 || facing == 3) {
+        tempY = boxY;
+      }
+      //if(tempX >= 0 && tempY >= 0){
+        Serial.print('b');Serial.print(tempX);Serial.print(',');Serial.print(tempY);
+        Serial.println('!');
+        analogWrite(LED, 0);
+        //}
+      }
 
-    if( (getDistance(FLtrigPin, FLechoPin) <= 15 ) || (getDistance(FRtrigPin, FRechoPin) <= 15)) {
+    if(getDistance(FRtrigPin, FRechoPin) <= 17) {
       // Turn Left
-    turnLeft();
-    delay(1900);
-    turns++;
+      turnLeft();
+      delay(2050);
+      turns++;
     
-    if (facing == 3) {    // Update Direction
-      facing = (direct)(0);
-    }
-    else {facing = (direct)(facing + 1);}
-    Serial.print("Now facing: ");Serial.println(facing);   
+     if (facing == 3) {    // Update Direction
+        facing = (direct)(0);
+       }
+        else {facing = (direct)(facing + 1);}   
     }
     
   }while(turns<=4);
 
     // Move Forward
     driveStraight();
-    delay(2000);
+
+    while(!done){
+     if( getDistance(LefttrigPin, LeftechoPin) <= 30){
+    
+        sendBox();
+          //while(boxX <= 0 || boxY <= 0){
+              //sendBox();
+              //}
+         tempX = boxX;
+         tempY = boxY;
+        //if(tempX >= 0 && tempY >= 0){
+         Serial.print('b');Serial.print(tempX);Serial.print(',');Serial.print(tempY);
+         Serial.println('!');
+      //}
+      
+        while(getDistance(LefttrigPin, LeftechoPin) <= 30){
+            printSelf();
+            delay(800);
+            analogWrite(LED, 150);
+         }
+      
+        sendBox();
+        tempX = boxX;
+        Serial.print('b');Serial.print(tempX);Serial.print(',');Serial.print(tempY);
+        Serial.println('!');
+        analogWrite(LED, 0);
+        done = true;
+     }
+    }
 
     // Power Off
     powerOff();
 
-  printSelf(0);
-  inProgress = false;
+  printSelf();
+  
+  Serial.print("STOP");
   delay(1000);
 
   exit(0);
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////
+
+void startLights() {
+ 
+  analogWrite(LED, 150);
+  delay(1000);          // 3....
+  analogWrite(LED, 0);
+  analogWrite(LED, 150);
+  delay(1000);          // 2....
+  analogWrite(LED, 0);
+  analogWrite(LED, 150);
+  delay(1000);          // 1....
+  analogWrite(LED, 0);
+}
+
 
 void driveStraight() {
 
@@ -164,7 +225,6 @@ void driveStraight() {
    digitalWrite(RLmotorPin4, LOW);
    digitalWrite(RRmotorPin1, HIGH);
    digitalWrite(RRmotorPin2, LOW);
-  
 }
 
 void turnLeft() {
@@ -176,8 +236,7 @@ void turnLeft() {
     digitalWrite(RLmotorPin3, LOW);
     digitalWrite(RLmotorPin4, HIGH);
     digitalWrite(RRmotorPin1, HIGH);
-    digitalWrite(RRmotorPin2, LOW);
-  
+    digitalWrite(RRmotorPin2, LOW); 
 }
 
 void powerOff() {
@@ -192,55 +251,50 @@ void powerOff() {
     digitalWrite(RRmotorPin2, LOW);
 }
 
-void printSelf(int fac) {
+void printSelf() {
 
-  if(fac == 0){
-    selfX = ((getDistance(FLtrigPin, FLechoPin) + getDistance(FRtrigPin, FRechoPin)) / 2) + 12;
+  if(facing == 0){
+    selfX = (getDistance(FRtrigPin, FRechoPin)) + 12;
     selfY = getDistance(RighttrigPin, RightechoPin) + 9;
   }
-  else if(fac == 1) {
+  else if(facing == 1) {
     selfX = getDistance(RighttrigPin, RightechoPin) + 9;
-    selfY = (150 - ((getDistance(FLtrigPin, FLechoPin) + getDistance(FRtrigPin, FRechoPin)) / 2) - 12);
+    selfY = (150 - (getDistance(FRtrigPin, FRechoPin)) - 12);
   }
-  else if(fac == 2) {
-    selfX = (150 - ((getDistance(FLtrigPin, FLechoPin) + getDistance(FRtrigPin, FRechoPin)) / 2) - 12);
+  else if(facing == 2) {
+    selfX = (150 - ( + getDistance(FRtrigPin, FRechoPin)) - 12);
     selfY = (150 - getDistance(RighttrigPin, RightechoPin) - 9);
   }
-  else if (fac == 3) {
+  else if (facing == 3) {
     selfX = (150 - getDistance(RighttrigPin, RightechoPin) - 9);
-    selfY = ((getDistance(FLtrigPin, FLechoPin) + getDistance(FRtrigPin, FRechoPin)) / 2) + 12;
+    selfY = (getDistance(FRtrigPin, FRechoPin)) + 12;
   }
-  if(selfX >= 0 && selfX <= 150 && selfY >= 0 && selfY <= 150){
-    Serial.write('p');Serial.write(selfX);Serial.write(','); Serial.write(selfY);
-    Serial.write('/');
-  }
+  //if(selfX >= 0 && selfX <= 150 && selfY >= 0 && selfY <= 150){
+    Serial.print('s');Serial.print(selfX);Serial.print(','); Serial.print(selfY);
+    Serial.print('!');
+    Serial.println();
+  //}
 }
 
-void sendBox(int fac){
+void sendBox(){
 
-  int boxX, boxY;
-
-  if(fac == 0){
-    boxX = ((getDistance(FLtrigPin, FLechoPin) + getDistance(FRtrigPin, FRechoPin)) / 2) + 12;
-    boxY = getDistance(RighttrigPin, RightechoPin) + 19 + getDistance(LefttrigPin, LeftechoPin);
+  if(facing == 0) {
+    boxX = selfX;
+    boxY = selfY + 10 + getDistance(LefttrigPin, LeftechoPin);
   }
-  else if(fac == 1) {
-    boxX = getDistance(RighttrigPin, RightechoPin) + 19 + getDistance(LefttrigPin, LeftechoPin);
-    boxY = (150 - ((getDistance(FLtrigPin, FLechoPin) + getDistance(FRtrigPin, FRechoPin)) / 2) - 12);
+  else if(facing == 1) {
+    boxX = selfX + 10 + getDistance(LefttrigPin, LeftechoPin);
+    boxY = selfY;
   }
-  else if(fac == 2) {
-    boxX = (150 - ((getDistance(FLtrigPin, FLechoPin) + getDistance(FRtrigPin, FRechoPin)) / 2) - 12);
-    boxY = (150 - getDistance(RighttrigPin, RightechoPin) - 19 - getDistance(LefttrigPin, LeftechoPin));
+  else if(facing == 2) {
+    boxX = selfX;
+    boxY = selfY - 10 - getDistance(LefttrigPin, LeftechoPin);
   }
-  else if (fac == 3) {
-    boxX = (150 - getDistance(RighttrigPin, RightechoPin) - 19 - getDistance(LefttrigPin, LeftechoPin));
-    boxY = ((getDistance(FLtrigPin, FLechoPin) + getDistance(FRtrigPin, FRechoPin)) / 2) + 12;
+  else if (facing == 3) {
+    boxX = selfX - 10 - getDistance(LefttrigPin, LeftechoPin);
+    boxY = selfY;
   }
   
-  if(boxX >= 0 && boxY >= 0){
-  Serial.write('b');Serial.write(boxX);Serial.write(',');Serial.write(boxY);
-  Serial.write('/');
-  }
 }
 
 float getDistance(int trigPin, int echoPin) {
